@@ -47,7 +47,8 @@ int main()
   while( 1 )
   {
     // Print out the msh prompt
-    printf ("msh> ");
+    printf ("msh>");
+    printf ("\n");
 
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
@@ -87,14 +88,43 @@ int main()
     // Now print the tokenized input as a debug check
     // \TODO Remove this code and replace with your shell functionality
 
-    int token_index  = 0;
-    for( token_index = 0; token_index < token_count; token_index ++ ) 
+    // int token_index  = 0;
+    // for( token_index = 0; token_index < token_count; token_index ++ ) 
+    // {
+    //   printf("token[%d] = %s\n", token_index, token[token_index] );  
+    // }
+
+    // free( working_root );
+
+
+pid_t pid = fork( );
+  if( pid == 0 )
+  {
+
+    char *arguments[4];
+
+    arguments[0] = ( char * ) malloc( strlen( "ls" ) );
+    arguments[1] = ( char * ) malloc( strlen( "-l" ) );
+
+    strncpy( arguments[0], "ls", strlen( "ls" ) );
+    strncpy( arguments[1], "-1", strlen( "-1" ) );
+
+    arguments[2] = NULL;
+
+    // Notice you can add as many NULLs on the end as you want
+    int ret = execvp( arguments[0], &arguments[0] );  
+    if( ret == -1 )
     {
-      printf("token[%d] = %s\n", token_index, token[token_index] );  
+      perror("execl failed: ");
     }
-
-    free( working_root );
-
   }
+  else 
+  {
+    int status;
+    wait( & status );
+  }
+  
+  }
+
   return 0;
 }
