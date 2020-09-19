@@ -95,57 +95,46 @@ int main()
       //   printf("token[%d] = %s\n", token_index, token[token_index] );  
       // }
 
-    
-    if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
+    if (token[0] != NULL)
     {
-      return 0;
-    }
-
-    else if(strcmp(token[0], "ls") == 0)
-    {
-      pid_t pid = fork( );
-      if( pid == 0 ) // listing out the files using 'ls'
+      if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
       {
-          // Notice you can add as many NULLs on the end as you want
-          int ret = execvp( token[0], &token[0] );  
-          if( ret == -1 )
-          {
-              perror("execl failed: ");
-          }
-
-          else 
-          {
-              int status;
-              wait( & status );
-          }
+        return 0;
       }
-    }
-
-    else if(strcmp( token[0], "cd") == 0)
-    {
-      chdir(token[1]);
-    }
-
-    else if(strcmp(token[0], "pwd") == 0)
-    {
-      pid_t pid = fork();
-      if(pid == 0)
+      else if (strcmp(token[0], "cd") == 0)
       {
-        execvp(token[0], token);
+        chdir(token[1]);
+      }
+      else if( strcmp(token[0], "showpids") == 0)
+      {
+        printf("My process ID : %d\n", getpid());
       }
       else 
       {
-        int status;
-        wait(&status);
+        pid_t pid = fork();
+        if (pid == 0)
+        {
+          if (execvp(token[0], token) == -1)
+          {
+            
+            printf("Command not found: %s\n", token[0]);
+            return 0;
+          }
+          else
+          {
+            execvp(token[0], token);
+          }
+          
+        }
+        else 
+        {
+          int status;
+          wait( & status );
+        }
       }
     }
-
-    else
-    {
-      printf( "%s Command not found. \n",token[0]);
-    }
     free( working_root );
-  }
-
+      
+}
   return 0;
 }
