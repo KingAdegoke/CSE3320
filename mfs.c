@@ -37,7 +37,7 @@
 
 #define MAX_COMMAND_SIZE 255    // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 5     // Mav shell only supports five arguments
+#define MAX_NUM_ARGUMENTS 10     // Mav shell only supports five arguments
 
 int main()
 {
@@ -46,90 +46,106 @@ int main()
 
   while( 1 )
   {
-    // Print out the msh prompt
-    printf ("msh>");
-    printf ("\n");
+      // Print out the msh prompt
+      printf ("msh> ");
 
-    // Read the command from the commandline.  The
-    // maximum command that will be read is MAX_COMMAND_SIZE
-    // This while command will wait here until the user
-    // inputs something since fgets returns NULL when there
-    // is no input
-    while( !fgets (cmd_str, MAX_COMMAND_SIZE, stdin) );
 
-    /* Parse input */
-    char *token[MAX_NUM_ARGUMENTS];
+      // Read the command from the commandline.  The
+      // maximum command that will be read is MAX_COMMAND_SIZE
+      // This while command will wait here until the user
+      // inputs something since fgets returns NULL when there
+      // is no input
+      while( !fgets (cmd_str, MAX_COMMAND_SIZE, stdin) );
 
-    int   token_count = 0;                                 
-                                                           
-    // Pointer to point to the token
-    // parsed by strsep
-    char *argument_ptr;                                         
-                                                           
-    char *working_str  = strdup( cmd_str );                
+      /* Parse input */
+      char *token[MAX_NUM_ARGUMENTS];
 
-    // we are going to move the working_str pointer so
-    // keep track of its original value so we can deallocate
-    // the correct amount at the end
-    char *working_root = working_str;
+      int   token_count = 0;                                 
+                                                            
+      // Pointer to point to the token
+      // parsed by strsep
+      char *argument_ptr;                                         
+                                                            
+      char *working_str  = strdup( cmd_str );                
 
-    // Tokenize the input stringswith whitespace used as the delimiter
-    while ( ( (argument_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
-              (token_count<MAX_NUM_ARGUMENTS))
-    {
-      token[token_count] = strndup( argument_ptr, MAX_COMMAND_SIZE );
-      if( strlen( token[token_count] ) == 0 )
+      // we are going to move the working_str pointer so
+      // keep track of its original value so we can deallocate
+      // the correct amount at the end
+      char *working_root = working_str;
+
+      // Tokenize the input stringswith whitespace used as the delimiter
+      while ( ( (argument_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
+                (token_count<MAX_NUM_ARGUMENTS))
       {
-        token[token_count] = NULL;
-      }
-        token_count++;
-
-      if(token[0] == NULL )
-    }
-
-
-    // Now print the tokenized input as a debug check
-    // \TODO Remove this code and replace with your shell functionality
-
-    // int token_index  = 0;
-    // for( token_index = 0; token_index < token_count; token_index ++ ) 
-    // {
-    //   printf("token[%d] = %s\n", token_index, token[token_index] );  
-    // }
-
-  
-
-  pid_t pid = fork( );
-    if( pid == 0 )
-    {
-
-        char *arguments[4];
-
-        arguments[0] = ( char * ) malloc( strlen( "ls" ) );
-        arguments[1] = ( char * ) malloc( strlen( "-l" ) );
-
-        strncpy( arguments[0], "ls", strlen( "ls" ) );
-        strncpy( arguments[1], "-1", strlen( "-1" ) );
-
-        arguments[2] = NULL;
-
-        // Notice you can add as many NULLs on the end as you want
-        int ret = execvp( arguments[0], &arguments[0] );  
-        if( ret == -1 )
+        token[token_count] = strndup( argument_ptr, MAX_COMMAND_SIZE );
+        if( strlen( token[token_count] ) == 0 )
         {
-          perror("execl failed: ");
+          token[token_count] = NULL;
         }
+          token_count++;
+
+      }
+
+      // Now print the tokenized input as a debug check
+      // \TODO Remove this code and replace with your shell functionality
+
+      // int token_index  = 0;
+      // for( token_index = 0; token_index < token_count; token_index ++ ) 
+      // {
+      //   printf("token[%d] = %s\n", token_index, token[token_index] );  
+      // }
+
+    
+    if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
+    {
+      return 0;
     }
 
-  else 
-  {
-    int status;
-    wait( & status );
+    else if(strcmp(token[0], "ls") == 0)
+    {
+      pid_t pid = fork( );
+      if( pid == 0 ) // listing out the files using 'ls'
+      {
+          // Notice you can add as many NULLs on the end as you want
+          int ret = execvp( token[0], &token[0] );  
+          if( ret == -1 )
+          {
+              perror("execl failed: ");
+          }
+
+          else 
+          {
+              int status;
+              wait( & status );
+          }
+      }
+    }
+
+    else if(strcmp( token[0], "cd") == 0)
+    {
+      chdir(token[1]);
+    }
+
+    else if(strcmp(token[0], "pwd") == 0)
+    {
+      pid_t pid = fork();
+      if(pid == 0)
+      {
+        execvp(token[0], token);
+      }
+      else 
+      {
+        int status;
+        wait(&status);
+      }
+    }
+
+    else
+    {
+      printf( "%s Command not found. \n",token[0]);
+    }
+    free( working_root );
   }
-
- // free( working_root );
-
-
 
   return 0;
 }
