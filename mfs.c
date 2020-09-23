@@ -41,6 +41,8 @@
 
 int main()
 {
+    int cmdCT;
+    char CmdHIST[15][100];   
 
   char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
 
@@ -95,20 +97,41 @@ int main()
       //   printf("token[%d] = %s\n", token_index, token[token_index] );  
       // }
 
+
     if (token[0] != NULL)
     {
-      if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
+      if (strcmp(token[0], "history") == 0)
+      {
+        for (int i = 0; i<cmdCT; i++)
+        {
+           printf("%d: %s\n", i, CmdHIST[i]);
+        }
+      }
+
+      else if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
       {
         return 0;
       }
+
       else if (strcmp(token[0], "cd") == 0)
       {
         chdir(token[1]);
+        if(cmdCT <= 14)
+        {
+          strcpy(CmdHIST[cmdCT], token[0]);
+        }
+        cmdCT++;
       }
+
       else if( strcmp(token[0], "showpids") == 0)
       {
-        printf("My process ID : %d\n", getpid());
+       if(cmdCT <= 14)
+        {
+          strcpy(CmdHIST[cmdCT], token[0]);
+        }
+        cmdCT++;
       }
+
       else 
       {
         pid_t pid = fork();
@@ -116,7 +139,6 @@ int main()
         {
           if (execvp(token[0], token) == -1)
           {
-            
             printf("Command not found: %s\n", token[0]);
             return 0;
           }
@@ -128,13 +150,28 @@ int main()
         }
         else 
         {
+          if(cmdCT <= 14)
+          {
+            strcpy(CmdHIST[cmdCT], token[0]);
+          }
+          
           int status;
           wait( & status );
+          cmdCT++;
         }
+      }    
+
+      if(cmdCT <= 14)
+      {
+        strcpy(CmdHIST[cmdCT], token[0]);
       }
-    }
+    
     free( working_root );
-      
+    
+  }    
+
 }
+
   return 0;
+
 }
