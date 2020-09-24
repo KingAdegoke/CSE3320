@@ -1,24 +1,5 @@
-// The MIT License (MIT)
-// 
-// Copyright (c) 2016, 2017, 2020 Trevor Bakker 
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+/* Samuel Adegoke
+  ID 1001541794 */
 
 #define _GNU_SOURCE
 
@@ -30,85 +11,88 @@
 #include <string.h>
 #include <signal.h>
 
-#define WHITESPACE " \t\n"      // We want to split our command line up into tokens
-                                // so we need to define what delimits our tokens.
-                                // In this case  white space
-                                // will separate the tokens on our command line
+#define WHITESPACE " \t\n" // We want to split our command line up into tokens \
+                           // so we need to define what delimits our tokens.   \
+                           // In this case  white space                        \
+                           // will separate the tokens on our command line
 
-#define MAX_COMMAND_SIZE 255    // The maximum command-line size
+#define MAX_COMMAND_SIZE 255 // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 10     // Mav shell only supports five arguments
+#define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
 int main()
 {
-    int cmdCT;
-    char CmdHIST[15][100];   
+  int cmdCT, pidCT, histVal;
+  char CmdHIST[15][100];
+  char **fillerString;
+  int pidHIST[MAX_COMMAND_SIZE];
+  int pidArray[100];
 
-  char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
+  char *cmd_str = (char *)malloc(MAX_COMMAND_SIZE);
+  int len;
+  len = strlen(cmd_str);
 
-  while( 1 )
+  while (1)
   {
-      // Print out the msh prompt
-      printf ("msh> ");
+    // Print out the msh prompt
+    printf("msh> ");
 
+    // Read the command from the commandline.  The
+    // maximum command that will be read is MAX_COMMAND_SIZE
+    // This while command will wait here until the user
+    // inputs something since fgets returns NULL when there
+    // is no input
+    while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin))
+      ;
 
-      // Read the command from the commandline.  The
-      // maximum command that will be read is MAX_COMMAND_SIZE
-      // This while command will wait here until the user
-      // inputs something since fgets returns NULL when there
-      // is no input
-      while( !fgets (cmd_str, MAX_COMMAND_SIZE, stdin) );
+    /* Parse input */
+    char *token[MAX_NUM_ARGUMENTS];
 
-      /* Parse input */
-      char *token[MAX_NUM_ARGUMENTS];
+    int token_count = 0;
 
-      int   token_count = 0;                                 
-                                                            
-      // Pointer to point to the token
-      // parsed by strsep
-      char *argument_ptr;                                         
-                                                            
-      char *working_str  = strdup( cmd_str );                
+    // Pointer to point to the token
+    // parsed by strsep
+    char *argument_ptr;
 
-      // we are going to move the working_str pointer so
-      // keep track of its original value so we can deallocate
-      // the correct amount at the end
-      char *working_root = working_str;
+    char *working_str = strdup(cmd_str);
 
-      // Tokenize the input stringswith whitespace used as the delimiter
-      while ( ( (argument_ptr = strsep(&working_str, WHITESPACE ) ) != NULL) && 
-                (token_count<MAX_NUM_ARGUMENTS))
+    // we are going to move the working_str pointer so
+    // keep track of its original value so we can deallocate
+    // the correct amount at the end
+    char *working_root = working_str;
+
+    // Tokenize the input stringswith whitespace used as the delimiter
+    while (((argument_ptr = strsep(&working_str, WHITESPACE)) != NULL) &&
+           (token_count < MAX_NUM_ARGUMENTS))
+    {
+      token[token_count] = strndup(argument_ptr, MAX_COMMAND_SIZE);
+      if (strlen(token[token_count]) == 0)
       {
-        token[token_count] = strndup( argument_ptr, MAX_COMMAND_SIZE );
-        if( strlen( token[token_count] ) == 0 )
-        {
-          token[token_count] = NULL;
-        }
-          token_count++;
-
+        token[token_count] = NULL;
       }
+      token_count++;
+    }
 
-      // Now print the tokenized input as a debug check
-      // \TODO Remove this code and replace with your shell functionality
+    // Now print the tokenized input as a debug check
+    // \TODO Remove this code and replace with your shell functionality
 
-      // int token_index  = 0;
-      // for( token_index = 0; token_index < token_count; token_index ++ ) 
-      // {
-      //   printf("token[%d] = %s\n", token_index, token[token_index] );  
-      // }
-
-
+    // int token_index  = 0;
+    // for( token_index = 0; token_index < token_count; token_index ++ )
+    // {
+    //   printf("token[%d] = %s\n", token_index, token[token_index] );
+    // }
     if (token[0] != NULL)
     {
       if (strcmp(token[0], "history") == 0)
       {
-        for (int i = 0; i<cmdCT; i++)
+        for (int i = 0; i < cmdCT; i++)
         {
-           printf("%d: %s\n", i, CmdHIST[i]);
+          printf("%d: %s", i, CmdHIST[i]);
         }
+        cmdCT++;
       }
 
-      else if(strcmp(token[0],"quit") == 0 || strcmp(token[0],"exit") == 0) // to exit the shell
+      else if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0) // to exit the shell
       {
         return 0;
       }
@@ -116,23 +100,53 @@ int main()
       else if (strcmp(token[0], "cd") == 0)
       {
         chdir(token[1]);
-        if(cmdCT <= 14)
+        if (cmdCT <= 14)
         {
-          strcpy(CmdHIST[cmdCT], token[0]);
+          strcpy(CmdHIST[cmdCT], cmd_str);
         }
         cmdCT++;
       }
 
-      else if( strcmp(token[0], "showpids") == 0)
+      else if (strcmp(token[0], "showpids") == 0)
       {
-       if(cmdCT <= 14)
+        pidCT++;
+        for (int i = 0; i < pidCT; i++)
         {
-          strcpy(CmdHIST[cmdCT], token[0]);
+          printf("%d: %d\n", i, pidArray[i]);
+        }
+        if (cmdCT <= 14)
+        {
+          strcpy(CmdHIST[cmdCT], cmd_str);
         }
         cmdCT++;
       }
 
-      else 
+      else if (strstr(cmd_str, "!") != NULL)
+      {
+        cmd_str = cmd_str + 1;
+        histVal = atoi(cmd_str);
+        if (histVal > cmdCT)
+        {
+          printf("Not in bounds. \n");
+        }
+        else
+        {
+          fillerString = malloc(sizeof(char) * 100);
+          strcpy(fillerString, CmdHIST[histVal]);
+          pid_t pid = fork();
+
+          // [ls,-alt] = args
+          // arg = "ls"
+          // fillerString = "ls -alt"
+          // execvp("ls", char ** args)
+          execvp(fillerString[0], fillerString);
+          //execvp(fillerString[0], fillerString);
+          printf("%s\n", fillerString);
+          //execvp(fillerString[0], fillerString);
+        }
+      }
+
+      else
       {
         pid_t pid = fork();
         if (pid == 0)
@@ -146,32 +160,29 @@ int main()
           {
             execvp(token[0], token);
           }
-          
         }
-        else 
+        else
         {
-          if(cmdCT <= 14)
+          pidArray[cmdCT] = pid;
+          pidCT++;
+          if (cmdCT <= 14)
           {
-            strcpy(CmdHIST[cmdCT], token[0]);
+            strcpy(CmdHIST[cmdCT], cmd_str);
           }
-          
           int status;
-          wait( & status );
+          wait(&status);
           cmdCT++;
         }
-      }    
-
-      if(cmdCT <= 14)
-      {
-        strcpy(CmdHIST[cmdCT], token[0]);
       }
-    
-    free( working_root );
-    
-  }    
 
-}
+      if (cmdCT <= 14)
+      {
+        strcpy(CmdHIST[cmdCT], cmd_str);
+      }
+
+      free(working_root);
+    }
+  }
 
   return 0;
-
 }
