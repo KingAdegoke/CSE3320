@@ -75,6 +75,7 @@ void pidShift(pid_t pid, int pArr[100], int pCounter) //function that shifts pid
 
 void exclamation(char *input, int hV, int CC, char historyArr[16][100]) //function for when the user enters an exclamation point
 {
+  hV = 0;
   input = input + 1; //deleting the ! from the input
   hV = atoi(input);  //turning the number into a integer since it is already a string
   if (hV > CC - 1)   // detects if the history value is within the bounds
@@ -90,7 +91,8 @@ void exclamation(char *input, int hV, int CC, char historyArr[16][100]) //functi
 
 int main()
 {
-  int cmdCT, pidCT, histVal;
+  int cmdCT, pidCT;
+  int histVal;
   char CmdHIST[16][100];
   int pidArray[100];
 
@@ -121,7 +123,17 @@ int main()
     // put this if statement here so that cmd_str can be tokenized/parsed before being put into execvp
     if (strstr(cmd_str, "!") != NULL)
     {
-      exclamation(cmd_str, histVal, cmdCT, CmdHIST);
+      cmd_str = cmd_str + 1;   //deleting the ! from the input
+      histVal = atoi(cmd_str); //turning the number into a integer since it is already a string
+      if (histVal > cmdCT - 1) // detects if the history value is within the bounds
+      {
+        printf("Not in bounds. \n");
+        strcpy(cmd_str, ""); //copys nothing into the command so that it is able to go through execvp
+      }
+      else
+      {
+        strcpy(cmd_str, CmdHIST[histVal]); // stores the command from the history array into your input to store into execvp
+      }
     }
 
     char *working_str = strdup(cmd_str);
